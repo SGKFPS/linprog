@@ -13,15 +13,17 @@ LATEST_DATE = "31/12/2018"
 
 temp_data = []
 #file_folder = INSERT THE FOLDER WITH THE INPUT FILES HERE
-temp_file_loc = "./input/loads_0003_2018_BGKtemp_thai.csv"
-#temp_file_loc = "./input/20-06.SSL.0003_historic_cleaned_loads.01.BF.csv"
+#temp_file_loc = "./input/loads_0003_2018_BGKtemp_thai.csv"
+temp_file_loc = "./input/20-06.SSL.0003_historic_cleaned_loads.01.BF.csv"
 #temp_file_loc = file_folder+r"\20-06.SSL.0003_historic_cleaned_loads.01.BF.csv"
 temp_file = open(temp_file_loc, "r")
+
+print("Run")
 
 for i, line in enumerate(temp_file):
 	words = line.split(",")
 	words[0] = words[0].split(" ")
-	if i % 2 == 0:		# only store the lines with XX:00 times, because the XX:30 lines do not have temperature data
+	if i % 2 == 1:		# only store the lines with XX:00 times, because the XX:30 lines do not have temperature data
 		temp_data.append([words[0], words[3]])
 
 del temp_data[0]		# delete first line with titles
@@ -107,8 +109,8 @@ dcop_from_temp = interp1d(dcop_data[:, 0], dcop_data[:, 1], kind='cubic')
 #--------------------------------------------- COE processing ------------------------------------------------
 
 coe_data = []
-coe_file_loc = "./input/BGK_modified_linprogtariff_pence_thai.csv"
-#coe_file_loc = "./input/20-06.JLP.compiled_historical_tariffs.01.BF.csv"
+#coe_file_loc = "./input/BGK_modified_linprogtariff_pence_thai.csv"
+coe_file_loc = "./input/20-06.JLP.compiled_historical_tariffs.01.BF.csv"
 #coe_file_loc = file_folder+r"\20-06.JLP.compiled_historical_tariffs.01.BF.csv"
 
 coe_file = open(coe_file_loc, "r")
@@ -319,7 +321,7 @@ maxDischargePower = interp1d(maxDischargeTemperatures, maxDischargeRates, kind="
 
 
 ########### LOAD PROFILE EXTRACTION HERE #########################
-load_file_loc = "./input/example_dataset_TAI.csv"
+load_file_loc = "./input/example_dataset.csv"
 
 load_file = open(load_file_loc, 'r')
 
