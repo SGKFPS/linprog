@@ -54,10 +54,11 @@ for i in range(len(temperature_data)):
 	temperature_data[i][1] = j
 	j+=1
 
+print(temperature_data[0])
 #---------------------------------------------------------------------------------------------------------------------------------------
 
 # date in STRING format of "dd/mm/yyyy" from 01/01/2018 to 01/01/2020. Time (INT) is time period (Half-Hours) 1-48
-def get_ambient_temperature(date, time):
+def get_ambient_temperature(date, time, temperature_data):
 	for i, entry in enumerate(temperature_data):
 		#print(entry)
 		if date == entry[0]:
@@ -90,7 +91,8 @@ for i, line in enumerate(cop_file):
 
 cop_data = np.array(cop_data)
 #print(cop_data[:, 0])
-cop_from_temp = interp1d(cop_data[:, 0], cop_data[:, 1], kind='cubic')
+def get_cop_from_temp(cop_data):
+	return interp1d(cop_data[:, 0], cop_data[:, 1], kind='cubic')
 
 dcop_data = []
 dcop_file_loc = "./input/20-09.PCM.ICLv2_COP_maxPCM_mode.01.HC.csv"
@@ -103,7 +105,8 @@ for i, line in enumerate(dcop_file):
 
 
 dcop_data = np.array(dcop_data)
-dcop_from_temp = interp1d(dcop_data[:, 0], dcop_data[:, 1], kind='cubic')
+def get_dcop_from_temp(dcop_data):
+	return interp1d(dcop_data[:, 0], dcop_data[:, 1], kind='cubic')
 
 
 #--------------------------------------------- COE processing ------------------------------------------------
@@ -148,10 +151,13 @@ for i in range(1, len(coe_data)):
 		else:
 			list_of_dates.append(coe_data[i][0])
 
+print(coe_data[1])
+#print(list_of_dates)
+
 # target_date has to be in STRING format "dd/mm/yyyy" from 01/01/2018 until 31/10/2019
 # time period has be INT from 1 to 48 and represents half hour intervals. period 1 is 00:30. 00:00 is period 48 
 # of the previous day. so 05:00 is period 10, 10:00 is period 20, 15:00 is period 30, 20:00 is period 40
-def get_coe_by_date_and_time(target_date, time_period):
+def get_coe_by_date_and_time(target_date, time_period, coe_data):
 	for entry in coe_data:
 		if entry[0] == target_date:
 			if entry[1] == time_period:
@@ -160,7 +166,7 @@ def get_coe_by_date_and_time(target_date, time_period):
 
 #---------------------------------------------------------------------------------------------------------------------------------------
 # returns a list that contains the CoE for each time period in the target_date
-def get_coe_by_date(target_date):
+def get_coe_by_date(target_date, coe_data):
 	coe_by_date_list = []
 	for entry in coe_data:
 		if entry[0] == target_date:
@@ -174,11 +180,11 @@ def get_date_range(start_date, end_date):
 	endIndex = list_of_dates.index(end_date) + 1
 	return list_of_dates[startIndex:endIndex]
 
-def concatenate_coe_by_date_range(start_date, end_date):
+def concatenate_coe_by_date_range(start_date, end_date, coe_data):
 	coeList = []
 	dateRange = get_date_range(start_date, end_date)
 	for day in dateRange:
-		coeData = get_coe_by_date(day)
+		coeData = get_coe_by_date(day, coe_data)
 		coeList += coeData
 	return coeList
 
@@ -210,17 +216,17 @@ def quicksort(list, order):
 
 #---------------------------------------------------------------------------------------------------------------------------------------
 # calls get_coe_by_date(..) and returns the quicksorted time periods in the date according to the CoE	
-def sort_timeperiods_by_coe(target_date):
-	return quicksort(get_coe_by_date(target_date), "ascending")
+def sort_timeperiods_by_coe(target_date, coe_data):
+	return quicksort(get_coe_by_date(target_date, coe_data), "ascending")
 
 #---------------------------------------------------------------------------------------------------------------------------------------
 
-def sort_timeperiods_by_coe_and_cop(target_date, T_pcm, Q_mt, Q_lt):
-	coe_list = sort_timeperiods_by_coe(target_date)
+def sort_timeperiods_by_coe_and_cop(target_date, T_pcm, Q_mt, Q_lt, coe_data, temperature_data):
+	coe_list = sort_timeperiods_by_coe(target_date, coe_data)
 	mixed_coe_data = []
 
 	for item in coe_list:
-		T_amb = get_ambient_temperature(item[0], item[1])
+		T_amb = get_ambient_temperature(item[0], item[1], temperature_data)
 	
 		# I only care about the COP so I use _ and __ for the other two variables
 		# calc_W(...) returns W_tot, Q_PCM, COP
@@ -300,8 +306,8 @@ for j in range(len(temprtrs)):
 #coords = np.concatenate((temprtrs, powerLevels), axis=1)	# All great here!
 
 # a function that returns the correct COP depending on whether 
-def get_cop(load, date, time):
-	T_amb = get_ambient_temperature(date, time)
+def get_cop(load, date, time, temperature_data):
+	T_amb = get_ambient_temperature(date, time, temperature_data)
 	load_mt = 7/8 * load
 	load_lt = 1/8 * load
 
@@ -347,8 +353,9 @@ for i, line in enumerate(load_data):
 		load_data[i][0] = load_data[i-1][0]
 
 
+print(load_data[0])
 
-def get_load_by_date_and_time(date, time):
+def get_load_by_date_and_time(date, time, load_data):
 	for i in range(len(load_data)):
 		if load_data[i][0] == date:
 			if load_data[i][1] == time:
@@ -356,7 +363,7 @@ def get_load_by_date_and_time(date, time):
 	return("Date and time not in range of the records.")
 
 
-def get_load_by_date(date):
+def get_load_by_date(date, load_data):
 	load_by_date_list = []
 	for entry in load_data:
 		if entry[0] == date:
@@ -364,11 +371,11 @@ def get_load_by_date(date):
 	return load_by_date_list
 
 
-def concatenate_load_by_date_range(start_date, end_date):
+def concatenate_load_by_date_range(start_date, end_date, load_data):
 	loadList = []
 	dateRange = get_date_range(start_date, end_date)
 	for day in dateRange:
-		loadData = get_load_by_date(day)
+		loadData = get_load_by_date(day, load_data)
 		loadList += loadData
 	return loadList
 

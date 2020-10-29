@@ -6,9 +6,31 @@
 import plotly.graph_objects as go
 import plotly.io as pio
 import numpy as np
-from functions import convert_tp_to_time
 
+def convert_tp_to_time(timeperiods):
+	hour = 0
+	deciminute = 3
+	convertedHours = []
 
+	for i in range(len(timeperiods)):
+		if i % 2 == 0:
+			deciminute = 3
+		else:
+			deciminute = 0
+		if i % 2 == 1:
+			hour += 1
+		
+		if hour < 10:
+			temp = "0"+str(hour)+":"+str(deciminute)+"0"
+		elif hour >= 10 and hour < 24:
+			temp = str(hour)+":"+str(deciminute)+"0"
+		elif hour == 24:
+			hour = 0
+			temp = "0"+str(hour)+":"+str(deciminute)+"0"
+		
+		convertedHours.append(temp)
+
+	return convertedHours
 
 def createHeatmap(schedule):
 
@@ -47,6 +69,6 @@ def createHeatmap(schedule):
 
 
 
-    fig.write_image('./heatmap.png', width=1800, height=1000)
+    #fig.write_image('./heatmap.png', width=1800, height=1000)
 
     return
