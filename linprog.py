@@ -19,7 +19,7 @@ Defined as globals they represent parameters of the PCM,
 """
 maxDischargeRate = -80
 maxChargeRate = 80
-maxCapacity = 300
+#maxCapacity = 300
 periodicDischargeRate = 0.001
 dt = 0.5
 initialSoc = 0
@@ -59,7 +59,7 @@ dcop_data = np.array(dcop_data)
 get_dcop = interp1d(dcop_data[:, 0], dcop_data[:, 1], kind='cubic')
 
 
-# Create interpolation function for maxDischargePower
+# Create interpolation function for maxDischargePower per 100kW of total cooling
 maxDischargeTemperatures = [-5, 0, 5, 10, 15, 20, 25, 30, 35, 40]
 maxDischargeRates = [0, 0, 0, 10.73759, 22.42149, 36.0174, 56.8107, 54.50289,
                      62.88506, 70.23952]
@@ -69,7 +69,7 @@ maxDischargePower = interp1d(maxDischargeTemperatures, maxDischargeRates,
 # ====================================================================
 
 
-def loadData(filename, freq):
+def loadData(filename, freq='1M'):
     """ Load and prepare data for analysis.
     Computes Lambda, COP and COE and defines the frequency in the analysis
     with freq.
@@ -95,7 +95,7 @@ def loadData(filename, freq):
     return data, starts, ends
 
 
-def runModel(data, starts, ends, timestep=48):
+def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
     """ Run the model and compute the schedule according to the optimized
     PCM charge/dicharge values.
 
@@ -106,9 +106,10 @@ def runModel(data, starts, ends, timestep=48):
     timestep -- number of timesteps in day (default 48)
     """
 
+    #print('Model Params: ',maxCapacity,' ',mod)
     schedule = pd.DataFrame(columns=["Date", "HH", "Q_dot", "Mode", "SOC",
                                      "dt * CoE", "BAU COE"])
-
+    soc = 0
     for (start, end) in zip(starts, ends):
         # pick subset of the dataset according to the dates
         dat = data.loc[(data['Date'] >= start) & (data['Date'] <= end)]
@@ -154,9 +155,11 @@ def runModel(data, starts, ends, timestep=48):
 
         for k in Kindex:
             model.limits.add(model.u[k] >= -1 * bau[k-1])
-            model.limits.add((-1 * maxDischargePower(temps[k-1]), model.u[k],
-                             maxChargeRate))
-            model.limits.add((maxDischargeRate, model.u[k], maxChargeRate))
+            if mod is True:
+                model.limits.add((-1 * maxDischargePower(temps[k-1])*bau[k-1]*cop[k-1]/100,
+                                  model.u[k], maxChargeRate))
+            elif mod is False:
+                model.limits.add((maxDischargeRate, model.u[k], maxChargeRate))
 
             if J > 48:
                 J = 0
@@ -166,7 +169,7 @@ def runModel(data, starts, ends, timestep=48):
                               rightLimit))
             J += 1
 
-        # print("Added all limits")
+        #print("Added all limits")
 
         model.OBJ = Objective(
             expr=sum(
@@ -176,7 +179,7 @@ def runModel(data, starts, ends, timestep=48):
 
         # print('Defined Objectice function')
         opt = SolverFactory('glpk')
-        # print("Running the model: ")
+        #print("Running the model",maxCapacity,' ',mod)
 
         opt.solve(model)
 
@@ -184,11 +187,10 @@ def runModel(data, starts, ends, timestep=48):
         dates = dat['Date']
         period = dat['Period']
         price = dat['Price']
-
+        
         for k in Kindex:
             res = round(value(model.u[k]), 5)
             mode = ''
-            soc = 0
 
             if res == 0:
                 mode = 'standby'
@@ -214,8 +216,16 @@ def runModel(data, starts, ends, timestep=48):
                                         'dt * CoE': lamb[k-1],
                                         'BAU COE': price[k-1]},
                                        ignore_index=True)
+    #print('Done with Schedule',maxCapacity,' ',mod)
+
+    schedule['Loads(kW)'] = data['Loads']
+    schedule['Temp'] = data['Temp']
+    schedule['COP'] = data['COP']
+    schedule['DCOP'] = data['DCOP']
 
     return schedule
+
+
 
 
 if __name__ == "__main__":
@@ -228,10 +238,13 @@ if __name__ == "__main__":
 
     sched = runModel(data, starts, ends)
 
+    
+
+
     heat = sched.values
 
     print(sched)
-    print(heat)
-    print(heat[0, 0])
+    # print(heat)
+    # print(heat[0, 0])
 
-    createHeatmap(heat)
+    # createHeatmap(heat)
