@@ -218,7 +218,7 @@ def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
                                        ignore_index=True)
     #print('Done with Schedule',maxCapacity,' ',mod)
 
-    schedule['Loads(kW)'] = data['Loads']
+    schedule['Loads(kWh)'] = data['Loads']
     schedule['Temp'] = data['Temp']
     schedule['COP'] = data['COP']
     schedule['DCOP'] = data['DCOP']
