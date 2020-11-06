@@ -19,13 +19,15 @@ for f in files:
         if '300' in f:
             if 'Base' in f:
                 base = pd.read_pickle(f)
-            if 'DUoS' in f:
+            if 'Pred' in f:
                 fore = pd.read_pickle(f)
         #data = pd.read_pickle(f)
         #datas.append(data)
 
 #test = datas[0]
 print(base)
+
+base.to_pickle('./post/base.plk')
 maxdis = -1 * base['Loads(kW)'] * base['COP'] * maxDischargePower(base['Temp']) / 100
 print(fore)
 fore['True Price'] = base['dt * CoE']
@@ -46,6 +48,12 @@ for index, row in fore.iterrows():
         soc = 0
         ind = 0
     soc += row['Q_dot'] / 2
+    if soc < 0:
+        soc = 0
+        fore.loc[index, 'Q_dot'] = 0
+    if soc > 300:
+        fore.loc[index, 'Q_dot'] = 0
+        soc = 300
     socs.append(soc)
 
 fore['New SOC'] = socs
@@ -54,19 +62,58 @@ print(fore['SOC'].describe())
 print(fore["New SOC"].describe())
 print(fore[fore['New SOC'] > 300])
 
-cc = fore.loc[(fore['Q_dot'] > 0) & (fore['New SOC'] <= 310)]
-rc = fore.loc[(fore['Q_dot'] < 0) & (fore['New SOC'] >= 0)]
-cc = sum(cc['Q_dot'] / cc['COP'] * cc['True Price'])
-rc = sum(-1 * rc['Q_dot'] / rc['COP'] * rc['True Price'])
+cc = fore.loc[(fore['Q_dot'] > 0)]
+rc = fore.loc[(fore['Q_dot'] < 0)]
+Fc = pd.DataFrame()
+Fr = pd.DataFrame()
+Fc['CC'] = cc['Q_dot'] / cc['COP'] * cc['True Price']
+Fr['RR'] = -1 * rc['Q_dot'] / rc['COP'] * rc['True Price']
 
-print((rc - cc)/100)
+Fc['Date'] = fore['Date']
+Fr['Date'] = fore['Date']
+
+dails = []
+
+for d in base['Date'].unique():
+    c = Fc.loc[Fc['Date'] == d]
+    r = Fr.loc[Fr['Date'] == d]
+    dails.append((sum(r['RR']) - sum(c['CC']))/100)
+
+foredaily = pd.DataFrame()
+foredaily['Date'] = fore['Date'].unique()
+foredaily['Profits'] = dails
+
+print(foredaily.sum())
+
+#foredaily.to_pickle('./post/1200/pred.plk')
+
+# bc =  base.loc[base['Q_dot'] > 0]
+# br =  base.loc[base['Q_dot'] < 0]
+# Bc = pd.DataFrame()
+# Br = pd.DataFrame()
+# Bc['CC'] = bc['Q_dot'] / bc['COP'] * bc['dt * CoE']
+# Br['RR'] = -1 * br['Q_dot'] / br['COP'] * br['dt * CoE']
 
 
-bc =  base.loc[base['Q_dot'] > 0]
-br =  base.loc[base['Q_dot'] < 0]
-bc = sum(bc['Q_dot'] / bc['COP'] * bc['dt * CoE'])
-br = sum(-1 * br['Q_dot'] / br['COP'] * br['dt * CoE'])
-print((br - bc)/100)
+# Bc['Date'] = base['Date']
+# Br['Date'] = base['Date']
+
+# daily = []
+
+# for d in base['Date'].unique():
+#     c = Bc.loc[Bc['Date'] == d]
+#     r = Br.loc[Br['Date'] == d]
+#     daily.append((sum(r['RR']) - sum(c['CC']))/100)
+    
+
+# dailybase = pd.DataFrame()
+# dailybase['Date'] = base['Date'].unique()
+# dailybase['Profits'] = daily
+# print(dailybase)
+
+# dailybase.to_pickle('./post/base.plk')
+
+#print((br - bc)/100)
 # res = pd.DataFrame()
 
 # for f in files:
