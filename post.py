@@ -8,66 +8,98 @@ maxDischargeRates = [0, 0, 0, 10.73759, 22.42149, 36.0174, 56.8107, 54.50289,
 maxDischargePower = interp1d(maxDischargeTemperatures, maxDischargeRates,
                              kind="cubic")
 
-files = glob.glob('./output/*.pkl')
+files = glob.glob('./output/mult/*')
 
-# print(files)
-
-datas = []
+print(files)
+profits = []
 
 for f in files:
-    if 'dyn' in f:
-        if '300' in f:
-            if 'Base' in f:
-                base = pd.read_pickle(f)
-            if 'DUoS' in f:
-                fore = pd.read_pickle(f)
-        #data = pd.read_pickle(f)
-        #datas.append(data)
+    data = pd.read_pickle(f)
+    #print(data)
 
-#test = datas[0]
-print(base)
-maxdis = -1 * base['Loads(kW)'] * base['COP'] * maxDischargePower(base['Temp']) / 100
-print(fore)
-fore['True Price'] = base['dt * CoE']
-over = fore.loc[(fore['Mode'] == 'discharging') & (fore['Q_dot'] < maxdis) ]
+    cc =  data.loc[data['Q_dot'] > 0]
+    cr =  data.loc[data['Q_dot'] < 0]
+    cc = sum(cc['Q_dot'] / cc['COP'] * cc['dt * CoE'])
+    cr = sum(-1 * cr['Q_dot'] / cr['COP'] * cr['dt * CoE'])
+    #print(f[19:-10])
+    profits.append([(cr - cc)/100, int(f[19:-10]), data['Loads(kWh)'].sum()])
 
-print(maxdis.describe())
-print(over)
-print(maxdis[over.index])
-fore.loc[over.index, 'Q_dot'] = over
-print(fore)
-soc = 0
-socs = []
-ind = 0
-for index, row in fore.iterrows():
-    if row['HH'] == 1:
-        ind += 1
-    if ind == 30:
-        soc = 0
-        ind = 0
-    soc += row['Q_dot'] / 2
-    socs.append(soc)
+profits.sort(key=lambda x:x[1])
+print(profits)
+# base1 = pd.read_pickle('./output/run1/0003_Base_Load_300_const.pkl')
+# load1 = pd.read_pickle('./output/run1/0003_Load_1_300_const.pkl')
+# load5 = pd.read_pickle('./output/run1/0003_Load_5_300_const.pkl')
+# loadma = pd.read_pickle('./output/run1/0003_Load_MA_300_const.pkl')
+# base2 = pd.read_pickle('./output/run2/0003_Base_Load_300_const.pkl')
 
-fore['New SOC'] = socs
-print(fore)
-print(fore['SOC'].describe())
-print(fore["New SOC"].describe())
-print(fore[fore['New SOC'] > 300])
+# print(base1.columns)
+# print("Base:   " ,base1['Loads(kWh)'].sum())
+# print("Load_1: ",load1['Loads(kWh)'].sum())
+# print("Load_5: ",load5['Loads(kWh)'].sum())
+# print("Load_MA:",loadma['Loads(kWh)'].sum())
+# print(base1)
+# print(base2)
+# print(base1[base1['COP'] != base2['COP']])
+# files = glob.glob('./output/run1/*.pkl')
 
-cc = fore.loc[(fore['Q_dot'] > 0) & (fore['New SOC'] <= 310)]
-rc = fore.loc[(fore['Q_dot'] < 0) & (fore['New SOC'] >= 0)]
-cc = sum(cc['Q_dot'] / cc['COP'] * cc['True Price'])
-rc = sum(-1 * rc['Q_dot'] / rc['COP'] * rc['True Price'])
+# # print(files)
 
-print((rc - cc)/100)
+# datas = []
+
+# for f in files:
+#     if 'dyn' in f:
+#         if '300' in f:
+#             if 'Base' in f:
+#                 base = pd.read_pickle(f)
+#             if 'DUoS' in f:
+#                 fore = pd.read_pickle(f)
+#         #data = pd.read_pickle(f)
+#         #datas.append(data)
+
+# #test = datas[0]
+# print(base)
+# maxdis = -1 * base['Loads(kW)'] * base['COP'] * maxDischargePower(base['Temp']) / 100
+# print(fore)
+# fore['True Price'] = base['dt * CoE']
+# over = fore.loc[(fore['Mode'] == 'discharging') & (fore['Q_dot'] < maxdis) ]
+
+# print(maxdis.describe())
+# print(over)
+# print(maxdis[over.index])
+# fore.loc[over.index, 'Q_dot'] = over
+# print(fore)
+# soc = 0
+# socs = []
+# ind = 0
+# for index, row in fore.iterrows():
+#     if row['HH'] == 1:
+#         ind += 1
+#     if ind == 30:
+#         soc = 0
+#         ind = 0
+#     soc += row['Q_dot'] / 2
+#     socs.append(soc)
+
+# fore['New SOC'] = socs
+# print(fore)
+# print(fore['SOC'].describe())
+# print(fore["New SOC"].describe())
+# print(fore[fore['New SOC'] > 300])
+
+# cc = fore.loc[(fore['Q_dot'] > 0) & (fore['New SOC'] <= 310)]
+# rc = fore.loc[(fore['Q_dot'] < 0) & (fore['New SOC'] >= 0)]
+# cc = sum(cc['Q_dot'] / cc['COP'] * cc['True Price'])
+# rc = sum(-1 * rc['Q_dot'] / rc['COP'] * rc['True Price'])
+
+# print((rc - cc)/100)
 
 
-bc =  base.loc[base['Q_dot'] > 0]
-br =  base.loc[base['Q_dot'] < 0]
-bc = sum(bc['Q_dot'] / bc['COP'] * bc['dt * CoE'])
-br = sum(-1 * br['Q_dot'] / br['COP'] * br['dt * CoE'])
-print((br - bc)/100)
-# res = pd.DataFrame()
+# bc =  base.loc[base['Q_dot'] > 0]
+# br =  base.loc[base['Q_dot'] < 0]
+# bc = sum(bc['Q_dot'] / bc['COP'] * bc['dt * CoE'])
+# br = sum(-1 * br['Q_dot'] / br['COP'] * br['dt * CoE'])
+# print((br - bc)/100)
+# # res = pd.DataFrame()
 
 # for f in files:
 #     if 'dyn' in f:
@@ -115,7 +147,7 @@ print((br - bc)/100)
 #     data = pd.read_pickle(f)
 #     #print(data.loc[data['Loads(kW)'] < 80/data['COP']])
 #     if '300' in f:
-#         if 'dyn' in f:
+#         if 'const' in f:
 #             if 'Base_Load' in f:
 #                 const300['Date'] = data['Date']
 #                 const300['Period'] = data['HH']
