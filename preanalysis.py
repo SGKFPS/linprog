@@ -1,6 +1,7 @@
 import pandas as pd
 import glob
 from datetime import datetime, timedelta
+import numpy as np
 
 
 start_date = '2019-01-31'
@@ -18,9 +19,9 @@ for f in files:
 #print(data[-1])
 #dat = data[-1]
 
-el2318 = data[0]
-el0003 = data[1]
-load0003 = data[2]
+el2318 = pd.read_excel('./input/sense/Store 2318 forecast and real electricity price Year 2019.xlsx')
+el0003 = pd.read_excel('./input/sense/Store 0003 forecast and real electricity price Year 2019 full year.xlsx')
+load0003 = pd.read_excel('./input/sense/Store 0003 Load forcasting input with temperature.xlsx')
 load2318 = data[3]
 
 load0003 = load0003.drop_duplicates(subset=['Date'])
@@ -43,7 +44,7 @@ el2318 = el2318.loc[mask].reset_index(drop=True)
 mask = (el0003['Date and Time'] >= start_date) & (el0003['Date and Time'] < end_date)
 el0003 = el0003.loc[mask].reset_index(drop=True)
 
-print(load2318)
+print(load0003)
 
 # #dup = dat[dat.duplicated(['Date'])]
 
@@ -73,70 +74,71 @@ load0003['Predicted ITPack Model 1'] = load0003['Predicted ITPack Model 1'].fill
 load0003['Predicted ITPack Flat (Monthly Average)'] = load0003['Predicted ITPack Flat (Monthly Average)'].fillna(method='ffill')
 load0003['ITPackElectricity_Observed'] = load0003['ITPackElectricity_Observed'].fillna(method='ffill')
 load0003['Predicted ITPack Model 5'] = load0003['Predicted ITPack Model 5'].fillna(method='ffill')
+load0003['Temperature'] = load0003['Temperature'].fillna(method='ffill')
 load0003['Predicted ITPack Model 5H (+Humidity)'] = load0003['Predicted ITPack Model 5H (+Humidity)'].fillna(method='ffill')
 
 #print(load0003)
 
 
-""" Store 2318 refrigeration loads """
-load2318 = load2318.append({'Date' : pd.Timestamp('2019-03-31 01:00:00')}, ignore_index=True)
-load2318 = load2318.append({'Date' : pd.Timestamp('2019-03-31 01:30:00')}, ignore_index=True)
-load2318 = load2318.sort_values(by='Date')
-load2318 = load2318.reset_index(drop=True)
+# """ Store 2318 refrigeration loads """
+# load2318 = load2318.append({'Date' : pd.Timestamp('2019-03-31 01:00:00')}, ignore_index=True)
+# load2318 = load2318.append({'Date' : pd.Timestamp('2019-03-31 01:30:00')}, ignore_index=True)
+# load2318 = load2318.sort_values(by='Date')
+# load2318 = load2318.reset_index(drop=True)
 
-#print(load2318.columns)
+# #print(load2318.columns)
 
-load2318['Predicted DTPack Model 1'] = load2318['Predicted DTPack Model 1'].fillna(method='ffill')
-load2318['Predicted DTPack Flat (Monthly Average)'] = load2318['Predicted DTPack Flat (Monthly Average)'].fillna(method='ffill')
-load2318['DTPackElectricity_Observed'] = load2318['DTPackElectricity_Observed'].fillna(method='ffill')
-load2318['Predicted DTPack Model 5'] = load2318['Predicted DTPack Model 5'].fillna(method='ffill')
-load2318['Predicted DTPack Model 5H (+Humidity)'] = load2318['Predicted DTPack Model 5H (+Humidity)'].fillna(method='ffill')
+# load2318['Predicted DTPack Model 1'] = load2318['Predicted DTPack Model 1'].fillna(method='ffill')
+# load2318['Predicted DTPack Flat (Monthly Average)'] = load2318['Predicted DTPack Flat (Monthly Average)'].fillna(method='ffill')
+# load2318['DTPackElectricity_Observed'] = load2318['DTPackElectricity_Observed'].fillna(method='ffill')
+# load2318['Predicted DTPack Model 5'] = load2318['Predicted DTPack Model 5'].fillna(method='ffill')
+# load2318['Predicted DTPack Model 5H (+Humidity)'] = load2318['Predicted DTPack Model 5H (+Humidity)'].fillna(method='ffill')
 
 
 # print(load2318)
 
 
 
-f3 = './input/sense/20-06.SSL.0003_historic_cleaned_loads.01.BF.csv'
+# f3 = './input/sense/20-06.SSL.0003_historic_cleaned_loads.01.BF.csv'
 
-df = pd.read_csv(f3)
-df['Date'] = pd.to_datetime(df['Date'])
-mask = (df['Date'] >= start_date) & (df['Date'] < end_date)
-temp0003 = df.loc[mask].reset_index(drop=True)
+# df = pd.read_csv(f3)
+# df['Date'] = pd.to_datetime(df['Date'])
+# mask = (df['Date'] >= start_date) & (df['Date'] < end_date)
+# temp0003 = df.loc[mask].reset_index(drop=True)
 
-temp0003['Temperature'] = temp0003['Temperature'].fillna(method='ffill')
-temp0003 = temp0003.append({'Date' : pd.Timestamp('2019-03-31 01:00:00')}, ignore_index=True)
-temp0003 = temp0003.append({'Date' : pd.Timestamp('2019-03-31 01:30:00')}, ignore_index=True)
-temp0003['Temperature'] = temp0003['Temperature'].fillna(method='ffill')
-temp0003['Temperature'] = temp0003['Temperature'].fillna(method='ffill')
-temp0003 = temp0003.sort_values(by='Date')
-temp0003 = temp0003.reset_index(drop=True)
+# temp0003['Temperature'] = temp0003['Temperature'].fillna(method='ffill')
+# temp0003 = temp0003.append({'Date' : pd.Timestamp('2019-03-31 01:00:00')}, ignore_index=True)
+# temp0003 = temp0003.append({'Date' : pd.Timestamp('2019-03-31 01:30:00')}, ignore_index=True)
+# temp0003['Temperature'] = temp0003['Temperature'].fillna(method='ffill')
+# temp0003['Temperature'] = temp0003['Temperature'].fillna(method='ffill')
+# temp0003 = temp0003.sort_values(by='Date')
+# temp0003 = temp0003.reset_index(drop=True)
 
-#print(temp0003.isna().sum())
+# #print(temp0003.isna().sum())
 
-load0003['Temperature'] = temp0003['Temperature']
-
-
-
-f2 = './input/sense/20-06.SSL.2288_historic_cleaned_loads.01.BF.csv'
-
-df = pd.read_csv(f2)
-df['Date'] = pd.to_datetime(df['Date'])
-mask = (df['Date'] >= start_date) & (df['Date'] < end_date)
-temp2318 = df.loc[mask].reset_index(drop=True)
-
-temp2318['Temperature'] = temp2318['Temperature'].fillna(method='ffill')
-temp2318 = temp2318.append({'Date' : pd.Timestamp('2019-03-31 01:00:00')}, ignore_index=True)
-temp2318 = temp2318.append({'Date' : pd.Timestamp('2019-03-31 01:30:00')}, ignore_index=True)
-temp2318['Temperature'] = temp2318['Temperature'].fillna(method='ffill')
-temp2318['Temperature'] = temp2318['Temperature'].fillna(method='ffill')
-temp2318 = temp2318.sort_values(by='Date')
-temp2318 = temp2318.reset_index(drop=True)
+#load0003['Temperature'] = temp0003['Temperature']
 
 
-load2318['Temperature'] = temp2318['Temperature']
 
-print(load2318)
+# f2 = './input/sense/20-06.SSL.2288_historic_cleaned_loads.01.BF.csv'
+
+# df = pd.read_csv(f2)
+# df['Date'] = pd.to_datetime(df['Date'])
+# mask = (df['Date'] >= start_date) & (df['Date'] < end_date)
+# temp2318 = df.loc[mask].reset_index(drop=True)
+
+# temp2318['Temperature'] = temp2318['Temperature'].fillna(method='ffill')
+# temp2318 = temp2318.append({'Date' : pd.Timestamp('2019-03-31 01:00:00')}, ignore_index=True)
+# temp2318 = temp2318.append({'Date' : pd.Timestamp('2019-03-31 01:30:00')}, ignore_index=True)
+# temp2318['Temperature'] = temp2318['Temperature'].fillna(method='ffill')
+# temp2318['Temperature'] = temp2318['Temperature'].fillna(method='ffill')
+# temp2318 = temp2318.sort_values(by='Date')
+# temp2318 = temp2318.reset_index(drop=True)
+
+
+#load2318['Temperature'] = temp2318['Temperature']
+
+#print(load2318)
 
 print(el0003.isna().sum())
 
@@ -144,7 +146,7 @@ sh0003 = pd.DataFrame()
 
 integers = list(range(1, 49)) * 335
 
-sh0003['Date'] = temp0003['Date'].dt.date
+sh0003['Date'] = load0003['Date'].dt.date
 sh0003['Period'] = integers
 sh0003['Temp'] = load0003['Temperature']
 sh0003['Base Loads'] = load0003['ITPackElectricity_Observed']
@@ -160,27 +162,41 @@ print(sh0003.isna().sum())
 
 sh2318 = pd.DataFrame()
 
-sh2318['Date'] = temp2318['Date'].dt.date
-sh2318['Period'] = integers
-sh2318['Temp'] = load2318['Temperature']
-sh2318['Base Loads'] = load2318['DTPackElectricity_Observed']
-sh2318['Predicted Loads 1'] = load2318['Predicted DTPack Model 1']
-sh2318['Predicted Loads MA'] = load2318['Predicted DTPack Flat (Monthly Average)']
-sh2318['Predicted Loads 5'] = load2318['Predicted DTPack Model 5']
-sh2318['Predicted Loads 5H'] = load2318['Predicted DTPack Model 5H (+Humidity)']
-sh2318['Base Price'] = el2318['Agile_excl_vat']
-sh2318['Predicted Price 1'] = el2318['Total_excl_triad']
+# sh2318['Date'] = temp2318['Date'].dt.date
+# sh2318['Period'] = integers
+# sh2318['Temp'] = load2318['Temperature']
+# sh2318['Base Loads'] = load2318['DTPackElectricity_Observed']
+# sh2318['Predicted Loads 1'] = load2318['Predicted DTPack Model 1']
+# sh2318['Predicted Loads MA'] = load2318['Predicted DTPack Flat (Monthly Average)']
+# sh2318['Predicted Loads 5'] = load2318['Predicted DTPack Model 5']
+# sh2318['Predicted Loads 5H'] = load2318['Predicted DTPack Model 5H (+Humidity)']
+# sh2318['Base Price'] = el2318['Agile_excl_vat']
+# sh2318['Predicted Price 1'] = el2318['Total_excl_triad']
 
-print(sh2318.isna().sum())
-print(sh2318)
+# print(sh2318.isna().sum())
+# print(sh2318)
 
 #sh0003.to_pickle('./dat/0003_sense.pkl')
 
+mults = np.arange(1., 3., 0.04)
+print(mults)
+print(len(mults))
 
 dats = ['Base_Load', 'Load_1', 'Load_MA', 'Load_5', 'Load_5H', 'Price_1', 'Price_DUoS', 'Pred']
 datasets = [pd.DataFrame() for i in range(len(dats))]
 
-print(datasets)
+# datasets = [pd.DataFrame() for i in mults]
+# # print(datasets)
+# i = 0
+# for (d, m) in zip(datasets, mults):
+#     d['Date'] = sh0003['Date']
+#     d['Period'] = sh0003['Period']
+#     d['Temp'] = sh0003['Temp']
+#     d['Loads'] = m * sh0003['Base Loads']
+#     d['Price'] = sh0003['Base Price']
+#     d.to_pickle('./dat/mult/'+str(i)+'.plk')
+#     i += 1
+
 
 for (d, n) in zip(datasets, dats):
     d['Date'] = sh0003['Date']
@@ -212,7 +228,7 @@ for (d, n) in zip(datasets, dats):
         d['Price'] = sh0003['Predicted DUoS']
     d.to_pickle('./dat/'+n+'.plk')
 
-print(datasets)
+#print(datasets)
 
 #print(el0003[el0003.isnull().any(axis=1)])
 

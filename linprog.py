@@ -20,7 +20,7 @@ Defined as globals they represent parameters of the PCM,
 maxDischargeRate = -80
 maxChargeRate = 80
 #maxCapacity = 300
-periodicDischargeRate = 0.001
+periodicDischargeRate = 0.1
 dt = 0.5
 initialSoc = 0
 
@@ -42,7 +42,7 @@ for i, line in enumerate(cop_file):
 
 cop_data = np.array(cop_data)
 # Set interpolation function to get COP value for a given ambient temperature
-get_cop = interp1d(cop_data[:, 0], cop_data[:, 1], kind='cubic')
+get_cop = interp1d(cop_data[:, 0], cop_data[:, 1], kind='linear')
 
 dcop_data = []
 dcop_file_loc = "./input/20-09.PCM.ICLv2_COP_maxPCM_mode.01.HC.csv"
@@ -56,7 +56,7 @@ for i, line in enumerate(dcop_file):
 
 dcop_data = np.array(dcop_data)
 # Set interpolation function to get DCOP value for a given ambient temperature
-get_dcop = interp1d(dcop_data[:, 0], dcop_data[:, 1], kind='cubic')
+get_dcop = interp1d(dcop_data[:, 0], dcop_data[:, 1], kind='linear')
 
 
 # Create interpolation function for maxDischargePower per 100kW of total cooling
@@ -64,7 +64,7 @@ maxDischargeTemperatures = [-5, 0, 5, 10, 15, 20, 25, 30, 35, 40]
 maxDischargeRates = [0, 0, 0, 10.73759, 22.42149, 36.0174, 56.8107, 54.50289,
                      62.88506, 70.23952]
 maxDischargePower = interp1d(maxDischargeTemperatures, maxDischargeRates,
-                             kind="cubic")
+                             kind="linear")
 
 # ====================================================================
 
@@ -110,6 +110,8 @@ def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
     schedule = pd.DataFrame(columns=["Date", "HH", "Q_dot", "Mode", "SOC",
                                      "dt * CoE", "BAU COE"])
     soc = 0
+    deltas = []
+    maxes = []
     for (start, end) in zip(starts, ends):
         # pick subset of the dataset according to the dates
         dat = data.loc[(data['Date'] >= start) & (data['Date'] <= end)]
@@ -154,10 +156,11 @@ def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
         lamb = dat['Lambda'].to_list()
 
         for k in Kindex:
-            model.limits.add(model.u[k] >= -1 * bau[k-1])
+            model.limits.add(model.u[k] >= -1 * bau[k-1] * cop[k-1])
             if mod is True:
                 model.limits.add((-1 * maxDischargePower(temps[k-1])*bau[k-1]*cop[k-1]/100,
                                   model.u[k], maxChargeRate))
+                maxes.append(maxDischargePower(temps[k-1]))
             elif mod is False:
                 model.limits.add((maxDischargeRate, model.u[k], maxChargeRate))
 
@@ -187,7 +190,7 @@ def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
         dates = dat['Date']
         period = dat['Period']
         price = dat['Price']
-        
+        delta = []
         for k in Kindex:
             res = round(value(model.u[k]), 5)
             mode = ''
@@ -199,6 +202,7 @@ def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
             elif res > 0:
                 mode = 'charging'
 
+            delta.append(res * dt)
             if k == 1:
                 soc = initialSoc + res * dt
             else:
@@ -216,12 +220,16 @@ def runModel(data, starts, ends, timestep=48, maxCapacity=300, mod=False):
                                         'dt * CoE': lamb[k-1],
                                         'BAU COE': price[k-1]},
                                        ignore_index=True)
+
+        deltas += (delta) 
     #print('Done with Schedule',maxCapacity,' ',mod)
 
     schedule['Loads(kWh)'] = data['Loads']
     schedule['Temp'] = data['Temp']
     schedule['COP'] = data['COP']
     schedule['DCOP'] = data['DCOP']
+    #schedule['Max'] = maxes
+    schedule['sDelta'] = deltas
 
     return schedule
 

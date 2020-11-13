@@ -6,31 +6,31 @@ maxDischargeTemperatures = [-5, 0, 5, 10, 15, 20, 25, 30, 35, 40]
 maxDischargeRates = [0, 0, 0, 10.73759, 22.42149, 36.0174, 56.8107, 54.50289,
                      62.88506, 70.23952]
 maxDischargePower = interp1d(maxDischargeTemperatures, maxDischargeRates,
-                             kind="cubic")
+                             kind="linear")
 
-files = glob.glob('./output/mult/*')
+# files = glob.glob('./output/mult/*')
 
-print(files)
-profits = []
+# print(files)
+# profits = []
 
-for f in files:
-    data = pd.read_pickle(f)
-    #print(data)
+# for f in files:
+#     data = pd.read_pickle(f)
+#     #print(data)
 
-    cc =  data.loc[data['Q_dot'] > 0]
-    cr =  data.loc[data['Q_dot'] < 0]
-    cc = sum(cc['Q_dot'] / cc['COP'] * cc['dt * CoE'])
-    cr = sum(-1 * cr['Q_dot'] / cr['COP'] * cr['dt * CoE'])
-    #print(f[19:-10])
-    profits.append([(cr - cc)/100, int(f[19:-10]), data['Loads(kWh)'].sum()])
+#     cc =  data.loc[data['Q_dot'] > 0]
+#     cr =  data.loc[data['Q_dot'] < 0]
+#     cc = sum(cc['Q_dot'] / cc['COP'] * cc['dt * CoE'])
+#     cr = sum(-1 * cr['Q_dot'] / cr['COP'] * cr['dt * CoE'])
+#     #print(f[19:-10])
+#     profits.append([(cr - cc)/100, int(f[19:-10]), data['Loads(kWh)'].sum()])
 
-profits.sort(key=lambda x:x[1])
-print(profits)
-# base1 = pd.read_pickle('./output/run1/0003_Base_Load_300_const.pkl')
-# load1 = pd.read_pickle('./output/run1/0003_Load_1_300_const.pkl')
-# load5 = pd.read_pickle('./output/run1/0003_Load_5_300_const.pkl')
-# loadma = pd.read_pickle('./output/run1/0003_Load_MA_300_const.pkl')
-# base2 = pd.read_pickle('./output/run2/0003_Base_Load_300_const.pkl')
+# profits.sort(key=lambda x:x[1])
+# print(profits)
+# base1 = pd.read_pickle('./output/mult_base/0003_Base_Load_300_const.pkl')
+# load1 = pd.read_pickle('./output/mult_base/0003_Load_1_300_const.pkl')
+# load5 = pd.read_pickle('./output/mult_base/0003_Load_5_300_const.pkl')
+# loadma = pd.read_pickle('./output/mult_base/0003_Load_MA_300_const.pkl')
+# base2 = pd.read_pickle('./output/mult_base/0003_Base_Load_300_const.pkl')
 
 # print(base1.columns)
 # print("Base:   " ,base1['Loads(kWh)'].sum())
@@ -40,7 +40,7 @@ print(profits)
 # print(base1)
 # print(base2)
 # print(base1[base1['COP'] != base2['COP']])
-# files = glob.glob('./output/run1/*.pkl')
+files = glob.glob('./output/test/*.pkl')
 
 # # print(files)
 
@@ -137,118 +137,118 @@ print(profits)
 #print(res.loc[res['Base Mode'] != res['P1 Mode']])
 
 
-# dyn300 = pd.DataFrame()
-# const300 = pd.DataFrame()
-# dyn1200 = pd.DataFrame()
-# dyn300 = pd.DataFrame()
-# #linprog/test/0003_Base_Load_300_const.pkl
-# print(pd.read_pickle('./test/0003_Base_Load_300_const.pkl'))
-# for f in files:
-#     data = pd.read_pickle(f)
-#     #print(data.loc[data['Loads(kW)'] < 80/data['COP']])
-#     if '300' in f:
-#         if 'const' in f:
-#             if 'Base_Load' in f:
-#                 const300['Date'] = data['Date']
-#                 const300['Period'] = data['HH']
-#                 const300['LBase_Q'] = data['Q_dot']
-#                 const300['Price_Base'] = data['dt * CoE']
-#                 const300['COP'] = data['COP']
-#                 const300['DCOP'] = data['DCOP']
-#                 #const300['LBase_CC'] = data['Q_dot'] / data['DCOP'] * data['dt * CoE']
-#             elif 'Load_1' in f:
-#                 const300['L1_Q'] = data['Q_dot']
-#             elif 'Load_MA' in f:
-#                 const300['LMA_Q'] = data['Q_dot']
-#             elif 'Load_5' in f:
-#                 const300['L5_Q'] = data['Q_dot']
-#             elif 'Load_5H' in f:
-#                 const300['L5H_Q'] = data['Q_dot']
-#             elif 'Price_1' in f:
-#                 const300['P1_Q'] = data['Q_dot']
-#                 const300['Price_1'] = data['dt * CoE']
-#             elif 'Price_DUoS' in f:
-#                 const300['PD_Q'] = data['Q_dot']
-#                 const300['Price_D'] = data['dt * CoE']
-#             elif 'Pred' in f:
-#                 const300['Pr_Q'] = data['Q_dot']
-#             elif 'DUoS' in f:
-#                 const300['PD_Q'] = data['Q_dot']                
+dyn300 = pd.DataFrame()
+const300 = pd.DataFrame()
+dyn1200 = pd.DataFrame()
+dyn300 = pd.DataFrame()
+#linprog/test/0003_Base_Load_300_const.pkl
+#print(pd.read_pickle('./test/0003_Base_Load_300_const.pkl'))
+for f in files:
+    data = pd.read_pickle(f)
+    #print(data.loc[data['Loads(kW)'] < 80/data['COP']])
+    if '300' in f:
+        if 'const' in f:
+            if 'Base_Load' in f:
+                const300['Date'] = data['Date']
+                const300['Period'] = data['HH']
+                const300['LBase_Q'] = data['Q_dot']
+                const300['Price_Base'] = data['dt * CoE']
+                const300['COP'] = data['COP']
+                const300['DCOP'] = data['DCOP']
+                #const300['LBase_CC'] = data['Q_dot'] / data['DCOP'] * data['dt * CoE']
+            elif 'Load_1' in f:
+                const300['L1_Q'] = data['Q_dot']
+            elif 'Load_MA' in f:
+                const300['LMA_Q'] = data['Q_dot']
+            elif 'Load_5' in f:
+                const300['L5_Q'] = data['Q_dot']
+            elif 'Load_5H' in f:
+                const300['L5H_Q'] = data['Q_dot']
+            elif 'Price_1' in f:
+                const300['P1_Q'] = data['Q_dot']
+                const300['Price_1'] = data['dt * CoE']
+            elif 'Price_DUoS' in f:
+                const300['PD_Q'] = data['Q_dot']
+                const300['Price_D'] = data['dt * CoE']
+            elif 'Pred' in f:
+                const300['Pr_Q'] = data['Q_dot']
+            elif 'DUoS' in f:
+                const300['PD_Q'] = data['Q_dot']                
 
 
-# profs300 = pd.DataFrame()
+profs300 = pd.DataFrame()
 
-# profs300['Date'] = const300['Date'].unique()
-# base_daily = []
-# L1_daily = []
-# LMA_daily = []
-# L5_daily = []
-# P1_daily = []
-# Pp_daily = []
-# PD_daily = []
+profs300['Date'] = const300['Date'].unique()
+base_daily = []
+L1_daily = []
+LMA_daily = []
+L5_daily = []
+P1_daily = []
+Pp_daily = []
+PD_daily = []
 
-# for d in profs300['Date']:
-#     dai = const300.loc[const300['Date'] == d]
+for d in profs300['Date']:
+    dai = const300.loc[const300['Date'] == d]
 
-#     bc =  dai.loc[dai['LBase_Q'] > 0]
-#     br =  dai.loc[dai['LBase_Q'] < 0]
-#     bc = sum(bc['LBase_Q'] / bc['COP'] * bc['Price_Base'])
-#     br = sum(-1 * br['LBase_Q'] / br['COP'] * br['Price_Base'])
+    bc =  dai.loc[dai['LBase_Q'] > 0]
+    br =  dai.loc[dai['LBase_Q'] < 0]
+    bc = sum(bc['LBase_Q'] / bc['COP'] * bc['Price_Base'])
+    br = sum(-1 * br['LBase_Q'] / br['COP'] * br['Price_Base'])
 
-#     bc1 = dai.loc[dai['L1_Q'] > 0]
-#     br1 = dai.loc[dai['L1_Q'] < 0]
-#     bc1 = sum(bc1['L1_Q'] / bc1['COP'] * bc1['Price_Base'])
-#     br1 = sum(-1 * br1['L1_Q'] / br1['COP'] * br1['Price_Base'])
-
-
-#     bcma = dai.loc[dai['LMA_Q'] > 0]
-#     brma = dai.loc[dai['LMA_Q'] < 0]
-#     bcma = sum(bcma['LMA_Q'] / bcma['COP'] * bcma['Price_Base'])
-#     brma = sum(-1 * brma['LMA_Q'] / brma['COP'] * brma['Price_Base'])
-
-#     bc5 = dai.loc[dai['L5_Q'] > 0]
-#     br5 = dai.loc[dai['L5_Q'] < 0]
-#     bc5 = sum(bc5['L5_Q'] / bc5['COP'] * bc5['Price_Base'])
-#     br5 = sum(-1 * br5['L5_Q'] / br5['COP'] * br5['Price_Base'])
-
-#     bcp1 = dai.loc[dai['P1_Q'] > 0]
-#     brp1 = dai.loc[dai['P1_Q'] < 0]
-#     bcp1 = sum(bcp1['P1_Q'] / bcp1['COP'] * bcp1['Price_Base'])
-#     brp1 = sum(-1 * brp1['P1_Q'] / brp1['COP'] * brp1['Price_Base'])
+    bc1 = dai.loc[dai['L1_Q'] > 0]
+    br1 = dai.loc[dai['L1_Q'] < 0]
+    bc1 = sum(bc1['L1_Q'] / bc1['COP'] * bc1['Price_Base'])
+    br1 = sum(-1 * br1['L1_Q'] / br1['COP'] * br1['Price_Base'])
 
 
-#     bcp = dai.loc[dai['Pr_Q'] > 0]
-#     brp = dai.loc[dai['Pr_Q'] < 0]
-#     bcp = sum(bcp['Pr_Q'] / bcp['COP'] * bcp['Price_Base'])
-#     brp = sum(-1 * brp['Pr_Q'] / brp['COP'] * brp['Price_Base'])
+    bcma = dai.loc[dai['LMA_Q'] > 0]
+    brma = dai.loc[dai['LMA_Q'] < 0]
+    bcma = sum(bcma['LMA_Q'] / bcma['COP'] * bcma['Price_Base'])
+    brma = sum(-1 * brma['LMA_Q'] / brma['COP'] * brma['Price_Base'])
 
-#     bcd = dai.loc[dai['PD_Q'] > 0]
-#     brd = dai.loc[dai['PD_Q'] < 0]
-#     bcd = sum(bcd['PD_Q'] / bcd['COP'] * bcd['Price_Base'])
-#     brd = sum(-1 * brd['PD_Q'] / brd['COP'] * brd['Price_Base'])
+    bc5 = dai.loc[dai['L5_Q'] > 0]
+    br5 = dai.loc[dai['L5_Q'] < 0]
+    bc5 = sum(bc5['L5_Q'] / bc5['COP'] * bc5['Price_Base'])
+    br5 = sum(-1 * br5['L5_Q'] / br5['COP'] * br5['Price_Base'])
 
-#     L5_daily.append((br5 - bc5)/100)
-#     LMA_daily.append((brma - bcma)/100)
-#     L1_daily.append((br1 - bc1)/100)
-#     base_daily.append((br - bc)/100)
-#     P1_daily.append((brp1 - bcp1)/100)
-#     Pp_daily.append((brp - bcp)/100)
-#     PD_daily.append((brd - bcd)/100)
-#     #print(cc)
-#     #print(rc)
+    bcp1 = dai.loc[dai['P1_Q'] > 0]
+    brp1 = dai.loc[dai['P1_Q'] < 0]
+    bcp1 = sum(bcp1['P1_Q'] / bcp1['COP'] * bcp1['Price_Base'])
+    brp1 = sum(-1 * brp1['P1_Q'] / brp1['COP'] * brp1['Price_Base'])
 
-#     #print(dai)
+
+    bcp = dai.loc[dai['Pr_Q'] > 0]
+    brp = dai.loc[dai['Pr_Q'] < 0]
+    bcp = sum(bcp['Pr_Q'] / bcp['COP'] * bcp['Price_Base'])
+    brp = sum(-1 * brp['Pr_Q'] / brp['COP'] * brp['Price_Base'])
+
+    bcd = dai.loc[dai['PD_Q'] > 0]
+    brd = dai.loc[dai['PD_Q'] < 0]
+    bcd = sum(bcd['PD_Q'] / bcd['COP'] * bcd['Price_Base'])
+    brd = sum(-1 * brd['PD_Q'] / brd['COP'] * brd['Price_Base'])
+
+    L5_daily.append((br5 - bc5)/100)
+    LMA_daily.append((brma - bcma)/100)
+    L1_daily.append((br1 - bc1)/100)
+    base_daily.append((br - bc)/100)
+    P1_daily.append((brp1 - bcp1)/100)
+    Pp_daily.append((brp - bcp)/100)
+    PD_daily.append((brd - bcd)/100)
+    #print(cc)
+    #print(rc)
+
+    #print(dai)
     
-# #print(sum(daily))
-# #print(months)
-# profs300['Load_5_Profits'] = L5_daily
-# profs300['Load_MA_Profits'] = LMA_daily
-# profs300['Base_Profits'] = base_daily
-# profs300['Load_1_Profits'] = L1_daily
-# profs300['Price_1_Profits'] = P1_daily
-# profs300['Pred_Profits'] = Pp_daily
-# profs300['DUoS_proftis'] = PD_daily
-# print(profs300.sum())
+#print(sum(daily))
+#print(months)
+profs300['Load_5_Profits'] = L5_daily
+profs300['Load_MA_Profits'] = LMA_daily
+profs300['Base_Profits'] = base_daily
+profs300['Load_1_Profits'] = L1_daily
+profs300['Price_1_Profits'] = P1_daily
+profs300['Pred_Profits'] = Pp_daily
+profs300['DUoS_proftis'] = PD_daily
+print(profs300.sum())
 
 #profs300['Period'] = const300['Period']
 #profs300['Base_Profs'] = 
